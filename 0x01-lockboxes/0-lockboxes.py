@@ -2,20 +2,18 @@
 """Solves the lock boxes puzzle """
 
 
-def x(i, vis, boxes):
-    """Check if all boxes can be opened by dfs
+def look_next_opened_box(opened_boxes):
+    """Looks for the next opened box
     Args:
-    i (int): List child
-        vis (list): List to check visited
-        boxes (list): List which contain all the boxes with the keys
+        opened_boxes (dict): Dictionary which contains boxes already opened
     Returns:
-        bool: True if all boxes can be opened, otherwise, False
+        list: List with the keys contained in the opened box
     """
-
-    vis[i] = 1
-    for it in boxes[i]:
-        if it < len(vis) and vis[it] == 0:
-            x(it, vis, boxes)
+    for index, box in opened_boxes.items():
+        if box.get('status') == 'opened':
+            box['status'] = 'opened/checked'
+            return box.get('keys')
+    return None
 
 
 def canUnlockAll(boxes):
@@ -24,17 +22,38 @@ def canUnlockAll(boxes):
         boxes (list): List which contain all the boxes with the keys
     Returns:
         bool: True if all boxes can be opened, otherwise, False
-        """
+    """
+    if len(boxes) <= 1 or boxes == [[]]:
+        return True
 
-    vis = []
-    for i in range(0, len(boxes)):
-        vis.append(0)
-    vis[0] = 1
-    x(0, vis, boxes)
-    for i in range(0, len(vis)):
-        if vis[i] == 0:
+    aux = {}
+    while True:
+        if len(aux) == 0:
+            aux[0] = {
+                'status': 'opened',
+                'keys': boxes[0],
+            }
+        keys = look_next_opened_box(aux)
+        if keys:
+            for key in keys:
+                try:
+                    if aux.get(key) and aux.get(key).get('status') \
+                       == 'opened/checked':
+                        continue
+                    aux[key] = {
+                        'status': 'opened',
+                        'keys': boxes[key]
+                    }
+                except (KeyError, IndexError):
+                    continue
+        elif 'opened' in [box.get('status') for box in aux.values()]:
+            continue
+        elif len(aux) == len(boxes):
+            break
+        else:
             return False
-    return True
+
+    return len(aux) == len(boxes)
 
 
 def main():
